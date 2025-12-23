@@ -1,0 +1,47 @@
+---
+title: "05-Acc"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(lme4)
+library(easystats)
+library(optimx)
+```
+
+```{r}
+
+rts <- readr::read_csv(
+  here("Analysis", "02-Data_Preprocessing", "Combined_Clean_Data", "TL_combined_cleaned.csv")
+)
+
+```
+
+```{r}
+
+nw_data_acc <- rts %>%
+filter(item_type != "word")
+
+head(nw_data_acc)
+```
+
+```{r}
+nw_data_acc <- nw_data_acc %>%
+  group_by(participant) %>%
+  filter(
+    between(
+      key_resp_2.rt,
+      mean(key_resp_2.rt, na.rm = TRUE) - 2.5 * sd(key_resp_2.rt, na.rm = TRUE),
+      mean(key_resp_2.rt, na.rm = TRUE) + 2.5 * sd(key_resp_2.rt, na.rm = TRUE)
+    )
+  ) %>%
+  ungroup()
+
+```
+
+```{r}
+
+write_csv(nw_data_acc, file="acc_cleaned.csv")
+```

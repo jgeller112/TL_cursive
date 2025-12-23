@@ -1,0 +1,107 @@
+---
+title: "02-Data_preprocessing"
+format: html
+editor: visual
+---
+## Step 2: Apply preregistered participant exclusions
+
+In this step we load the combined (uncleaned) dataset created in Step 1 and apply preregistered
+participant-level exclusion rules:
+
+1. Exclude participants whose **overall accuracy** is more than **2.5 SD below** the grand mean.
+2. Exclude participants who did **not complete exactly 160 trials** (i.e., `n_trials != 160`).
+   - This removes both incomplete sessions (<160) and repeaters/multiple runs (>160).
+
+### Load combined dataset
+
+```{r}
+library(tidyverse)
+library(here)
+```
+
+```{r}
+all_data <- readr::read_csv(
+  here("Analysis", "01-Read_Data", "Combined_Raw_Data", "TL_combined_alldata.csv")
+)
+```
+
+## Exclusion criterion 1: accuracy < grand mean − 2.5 SD
+```{r}
+
+acc_by_participant <- all_data %>%
+group_by(participant) %>%
+summarise(
+n_trials = n(),
+accuracy = mean(key_resp_2.corr, na.rm = TRUE),
+.groups = "drop"
+)
+
+#Count exclusions by reason
+
+acc_mean <- mean(acc_by_participant$accuracy, na.rm = TRUE)
+acc_sd <- sd(acc_by_participant$accuracy, na.rm = TRUE)
+
+acc_lo <- acc_mean - 2.5 * acc_sd
+
+excluded_low_acc <- acc_by_participant %>%
+filter(accuracy < acc_lo) %>%
+pull(participant)
+```
+
+## Exclusion criterion 2: trial count ≠ 160
+
+Participants were expected to contribute exactly 160 trials. Participants with fewer trials likely
+did not complete the experiment, whereas participants with more trials likely completed the
+experiment multiple times.
+
+```{r}
+excluded_bad_trials <- acc_by_participant %>%
+filter(n_trials != 160) %>%
+pull(participant)
+```
+
+## Combine exclusions and filter dataset
+
+We take the union of participants flagged by either exclusion criterion to ensure that each
+participant is removed only once.
+
+```{r}
+excluded_participants <- union(excluded_low_acc, excluded_bad_trials)
+
+all_data_clean <- all_data %>%
+filter(!participant %in% excluded_participants)
+```
+
+```{r}
+n_low_acc <- length(excluded_low_acc)
+n_bad_trials <- length(excluded_bad_trials)
+n_total_removed <- length(excluded_participants)
+
+cat(
+"Accuracy cutoff (mean − 2.5 SD):", round(acc_lo, 3), "\n",
+"Participants removed due to low accuracy:", n_low_acc, "\n",
+"Participants removed due to trial count ≠ 160:", n_bad_trials, "\n",
+"Total unique participants removed:", n_total_removed, "\n"
+)
+```
+## Participants per counterbalancing list
+
+After applying the preregistered exclusion criteria, we next examine how many participants
+contributed data to each counterbalancing list. This provides a quick check that participants
+are reasonably balanced across lists after exclusions.
+
+
+```{r}
+
+final_participants_by_list <- all_data_clean %>%
+distinct(participant, list_id) %>%
+count(list_id, name = "n_participants")
+
+print(final_participants_by_list)
+
+```
+```{r}
+
+write.csv(all_data_clean, file=here::here("Analysis", "02-Data_Preprocessing", "Combined_Clean_Data", "TL_combined_cleaned.csv"), row.names = FALSE)
+```
+

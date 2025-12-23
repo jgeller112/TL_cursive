@@ -1,0 +1,132 @@
+---
+title: "01-Read_Data"
+format: html
+editor: visual
+---
+## Overview
+
+This script reads all participant-level `.csv` files downloaded from Pavlovia (stored in `Raw_files/`),
+combines them into one dataset, keeps only the variables needed for analysis, removes missing values,
+and saves both:
+
+1. A combined dataset (`TL_combined_alldata.csv`)
+2. A data dictionary (`TL_data_dictionary.md`)
+
+We use `here()` so file paths are stable regardless of where the project is opened.
+
+## Load packages
+
+```{r}
+library(tidyverse)
+library(here)
+library(tinytable)
+```
+
+```{r}
+
+# List all CSV files
+file_list <- list.files(
+  path = here::here("Raw_files"),
+  pattern = "\\.csv$",
+  full.names = TRUE
+)
+
+# Read and combine into one data frame
+all_data <- file_list %>%
+  map_dfr(~ read_csv(.x, col_types = cols(participant = col_character())))
+
+
+```
+
+Let's get columns we need
+
+```{r}
+all_data <- all_data  |> 
+  select(participant, item_type, list_id, string, font, stim_file,key_resp_2.rt, key_resp_2.corr) |>
+  drop_na()
+      
+```
+
+Merge base word with each nonword for analyses
+
+
+```{r}
+
+stim_wide <- read_csv("Word_Targets_Spreadsheet.csv") |> 
+  rename("base" = `Word targets`, "TL" = `C-C TL`, "RL" = `C-C RL`) |> 
+   pivot_longer(
+    cols = c(TL, RL),
+    names_to = "item_type",
+    values_to = "string"
+  )
+
+```
+
+```{r}
+all_data <- all_data |>
+  left_join(stim_wide) |>
+  mutate(base = ifelse(is.na(base), string, base))
+```
+
+- Write `all_data` to folder. 
+```{r}
+
+write.csv(all_data, file=here::here("Analysis", "01-Read_Data", "Combined_Raw_Data", "TL_combined_alldata.csv"), row.names = FALSE)
+```
+
+## Data dictionary
+
+```{r}
+data_dictionary <- tibble::tibble(
+  Column = c(
+    "participant",
+    "item_type",
+    "list_id",
+    "string",
+    "base",
+    "font",
+    "stim_file",
+    "key_resp_2.rt",
+    "key_resp_2.corr"
+  ),
+  Type = c(
+    "character",
+    "character / factor",
+    "numeric / integer",
+    "character",
+    "character",
+    "character / factor",
+    "character",
+    "numeric",
+    "numeric / logical"
+  ),
+  Description = c(
+    "Participant identifier",
+    "Item type condition (e.g., RL vs TL)",
+    "Counterbalancing list ID",
+    "Presented letter string",
+    "Base word corresponding to the nonword stimulus",
+    "Font condition (print vs cursive)",
+    "Stimulus file name or ID",
+    "Reaction time",
+    "Response accuracy"
+  ),
+  Notes = c(
+    "Read as character to preserve leading zeros",
+    "Encodes lexical manipulation",
+    "Identifies which stimulus list a participant saw",
+    "The actual stimulus text",
+    "Used to link TL/RL nonwords to their lexical base; useful for item-level modeling",
+    "Visual disfluency manipulation",
+    "Useful for reproducibility and debugging",
+    "Typically measured in seconds",
+    "1 = correct, 0 = incorrect"
+  )
+) |>
+  tt()
+```
+
+
+
+
+

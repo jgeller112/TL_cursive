@@ -1,0 +1,97 @@
+---
+title: "03-RT_Preprocessing"
+format: html
+editor: visual
+---
+
+## RT preprocessing (nonwords only)
+
+In this section we (1) load the cleaned combined dataset, (2) restrict the data to **nonword trials**,
+and (3) apply preregistered **RT trimming** by removing correct-trial RTs that fall more than
+**±2.5 SD from each participant’s mean**. We also report how many trials are removed at each step.
+
+---
+
+### Load cleaned combined dataset
+
+```{r}
+library(tidyverse)
+library(here)
+
+rts <- readr::read_csv(
+  here("Analysis", "02-Data_Preprocessing", "Combined_Clean_Data", "TL_combined_cleaned.csv")
+)
+
+```
+
+## Exclude word trials
+
+We only analyze nonword trials, so we exclude trials where item_type == "word".
+
+```{r}
+n_total_trials <- nrow(rts)
+
+nw_data <- rts %>%
+filter(item_type != "word")
+
+n_after_nonword <- nrow(nw_data)
+n_removed_words <- n_total_trials - n_after_nonword
+
+cat(
+"Total trials in cleaned dataset:", n_total_trials, "\n",
+"Trials after excluding word trials:", n_after_nonword, "\n",
+"Trials removed (word trials):", n_removed_words, "\n"
+)
+
+```
+
+## RTs
+
+- Exclude RTs  2.5 SD above/below the mean per participant
+
+```{r}
+# Total nonword trials before any RT-related filtering
+n_total <- nrow(nw_data)
+
+# Step 1: remove incorrect responses
+nw_correct <- nw_data %>%
+  filter(key_resp_2.corr == 1)
+
+n_correct <- nrow(nw_correct)
+n_removed_incorrect <- n_total - n_correct
+pct_removed_incorrect <- 100 * n_removed_incorrect / n_total
+
+# Step 2: remove RT outliers (±2.5 SD per participant)
+nw_data_rt <- nw_correct %>%
+  group_by(participant) %>%
+  filter(
+    between(
+      key_resp_2.rt,
+      mean(key_resp_2.rt, na.rm = TRUE) - 2.5 * sd(key_resp_2.rt, na.rm = TRUE),
+      mean(key_resp_2.rt, na.rm = TRUE) + 2.5 * sd(key_resp_2.rt, na.rm = TRUE)
+    )
+  ) %>%
+  ungroup()
+
+n_after_rt <- nrow(nw_data_rt)
+n_removed_outliers <- n_correct - n_after_rt
+pct_removed_outliers <- 100 * n_removed_outliers / n_total
+
+# Total removed (either reason)
+n_removed_total <- n_total - n_after_rt
+pct_removed_total <- 100 * n_removed_total / n_total
+
+cat(
+  "Total nonword trials:", n_total, "\n",
+  "Removed due to incorrect responses:", n_removed_incorrect,
+  sprintf("(%.2f%%)", pct_removed_incorrect), "\n",
+  "Removed due to RT outliers (±2.5 SD):", n_removed_outliers,
+  sprintf("(%.2f%%)", pct_removed_outliers), "\n",
+  "Total trials removed:", n_removed_total,
+  sprintf("(%.2f%%)", pct_removed_total), "\n"
+)
+```
+
+```{r}
+write_csv(nw_data_rt, file=here::here("Analysis", "03-RT_Preprocessing", "Cleaned_RT", "TL_combined_cleaned_RT.csv"))
+```

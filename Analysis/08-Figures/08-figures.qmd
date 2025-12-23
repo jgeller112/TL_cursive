@@ -1,0 +1,150 @@
+---
+title: "07-figures"
+format: html
+editor: visual
+---
+
+# Figure code
+
+```{r}
+library(tidyverse)
+library(easystats)
+library(patchwork)
+library(ggview)
+
+```
+
+```{r}
+
+library(showtext)        # helpful to use custom Google fonts
+font_add_google("Dancing Script", "dancing")
+showtext_auto()
+
+
+```
+
+
+## RTs
+
+```{r}
+
+rts = read_rds(here::here("Analysis", "04-RT_analysis", "Model", "exgauss_TL.rds"))
+
+```
+
+```{r}
+
+rts_mu <- modelbased::estimate_means(
+  rts,
+  contrasts = c("font", "item_type"),
+  backend = "emmeans"
+) |>
+  plot() +
+  labs(
+    y = "RTs (s)",
+    x = "Script", 
+    title = "Ex-Gaussian: Mu"
+  ) +
+  scale_y_continuous(
+    limits = c(0.1, 1.2),
+    breaks = seq(0.1, 1.2, by = 0.2)
+  ) +
+  theme_classic(base_size = 14, base_family = "dancing")+ 
+  theme(legend.position = "none")
+
+
+```
+
+```{r}
+
+rts_tau <- modelbased::estimate_means(
+  rts,
+  contrasts = c("font", "item_type"),
+  predict = "tau",
+  backend = "emmeans"
+) |>
+  plot() +
+  labs(
+    y = "RTs (s)",
+    x = "Script",
+    title = "Ex-Gaussian: Tau"
+  ) +
+  scale_y_continuous(
+    limits = c(0.1, 1.2),
+    breaks = seq(0.1, 1.2, by = 0.2)
+  ) +
+  theme_classic(base_size = 14, "dancing") + 
+   guides(
+  color = guide_legend(title = "Confusability"),
+  fill  = guide_legend(title = "Confusability"))
+
+```
+
+```{r}
+
+# Combine (stacked)
+rts_mu | rts_tau +
+  plot_annotation(tag_levels = "A")
+
+```
+```{r}
+draws_both <-
+  bind_rows(
+    rts |>
+      emmeans(~ font * item_type, dpar = "mu", regrid = "response") |>
+      gather_emmeans_draws() |>
+      mutate(dpar = "mu"),
+    rts |>
+      emmeans(~ font * item_type, dpar = "tau", regrid = "response") |>
+      gather_emmeans_draws() |>
+      mutate(dpar = "tau")
+  )
+
+draws_both |>
+  ggplot(aes(x = .value, y = item_type, fill = item_type)) +
+  stat_halfeye(
+    slab_alpha = 0.6,
+    point_interval = median_qi,
+    .width = 0.95
+  ) +
+  facet_grid(dpar ~ font, scales = "free_x") +
+  labs(
+    x = "Estimated value (s)",
+    y = "Confusability",
+    title = "Ex-Gaussian parameters by Font and Confusability"
+  ) +
+  theme_lucid(base_size = 14) +
+  theme(legend.position = "none")
+
+```
+
+## Accuracy
+
+```{r}
+acc=read_rds(here::here("Analysis", "05-Acc", "model", "fit_acc_context_TL.rds"))
+```
+
+```{r}
+acc_TL <- modelbased::estimate_means(
+  acc,
+  by = c("font", "item_type"), 
+  backend="emmeans") |> 
+  plot() +
+  scale_y_continuous(
+    limits = c(0, 1),
+    labels = scales::label_percent(accuracy = 1)
+  ) +
+  labs(y = "Accuracy", x="Script") +
+  theme_classic(base_size=14, base_family="dancing") + 
+  guides(
+  color = guide_legend(title = "Confusability"),
+  fill  = guide_legend(title = "Confusability")
+)
+```
+
+```{r}
+
+```
+
+
+

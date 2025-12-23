@@ -1,0 +1,128 @@
+---
+title: "04-RT_analysis"
+format: html
+editor: visual
+---
+# RT Analysis
+
+```{r}
+library(lme4)
+library(easystats)
+library(tidyverse)
+library(emmeans)
+library(tidybayes)
+library(gamlss)
+library(brms)
+library(cmdstanr)
+library(ggdist)
+```
+
+```{r}
+
+nw_data_rt <- read_csv(here::here("Analysis", "03-RT_Preprocessing", "Cleaned_RT", "TL_combined_cleaned_RT.csv"))
+
+```
+
+# LME 
+
+```{r}
+nw_data_rt$item_type <- factor(nw_data_rt$item_type)
+nw_data_rt$font      <- factor(nw_data_rt$font)
+
+nw_data_rt$participant <- factor(nw_data_rt$participant)
+nw_data_rt$base      <- factor(nw_data_rt$base)
+
+
+contrasts(nw_data_rt$item_type) <- contr.sum(nlevels(nw_data_rt$item_type))/2
+contrasts(nw_data_rt$font)      <- contr.sum(nlevels(nw_data_rt$font))/2
+
+m_rt <- lmer(log(key_resp_2.rt)~ item_type * font + (0+font*item_type|participant)  + (0+item_type * font|base) , data = nw_data_rt)
+```
+
+```{r}
+parameters::model_parameters(m_rt) 
+```
+
+## Bayesian
+
+```{r}
+# real exgauss
+#remotes::install_github("mattansb/brms.exgaussian")
+```
+
+
+```{r}
+#get standard exgaussian
+library(brms.exgaussian)
+```
+
+
+```{r}
+exg_stanvars <- exgaussian2_stancode()
+exg_family <- exgaussian2()
+
+```
+
+```{r}
+ bform_tl <- bf(
+  key_resp_2.rt ~ font * item_type +
+    (1 + font * item_type | p | participant) +
+    (1 + font * item_type | i | base),
+
+  sigma ~ font * item_type +
+    (1 + font * item_type | p | participant) +
+    (1 + font * item_type | i | base),
+
+  tau ~ font * item_type +
+    (1 + font * item_type | p | participant) +
+    (1 + font * item_type | i | base)
+)
+```
+
+
+```{r}
+
+# make sure priors are applied evenely
+contrasts(nw_data_rt$font) <- contr.equalprior_pairs
+contrasts(nw_data_rt$item_type) <- contr.equalprior_pairs
+
+prior <- c(
+  prior("normal(0,1)", class = "b", coef=""),
+  prior("normal(0,1)", class = "b", dpar = "tau", coef="")
+)
+
+```
+
+
+```{r}
+
+fit_exg_TL_real <- brm(
+   bform_tl,
+  data = nw_data_rt,
+  warmup = 1000,
+  iter = 5000,
+  prior = prior,
+  family = exg_family,
+  stanvars = exg_stanvars,
+  init = 0,
+  cores = 4,
+  file = here::here("Analysis", "04-RT_analysis", "Model", "exgauss_TL_1"),
+  chains = 4,
+  seed = 666,
+  sample_prior = T,
+  save_pars = save_pars(all = T),
+  control = list(adapt_delta = 0.9),
+  backend = "cmdstanr",
+  threads = threading(2)
+)
+```
+
+
+```{r}
+d=modelbased::estimate_means(fit_exg_TL_real, contrast=c("font", "item_type"), backend = "emmeans")
+```
+
+```{r}
+
+modelbased::estimate_means(fit_exg_TL_real, by=c("font", "item_type"), predict="tau", backend = "emmeans") |> plot() + theme_abyss()
+```

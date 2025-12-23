@@ -1,0 +1,85 @@
+---
+title: "06-acc_analysis"
+format: html
+editor: visual
+---
+## Freq and Bayes GLMM
+
+```{r}
+library(lme4)
+library(easystats)
+library(brms)
+library(optimx)
+```
+
+```{r}
+control=glmerControl(optimizer = "optimx", calc.derivs = FALSE, 
+                     optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE))
+                     
+                     
+nw_data_acc$item_type <- factor(nw_data_acc$item_type)
+nw_data_acc$font<- factor(nw_data_acc$font)
+
+contrasts(nw_data_acc$item_type) <- contr.sum(nlevels(nw_data_acc$item_type)) / 2
+contrasts(nw_data_acc$font)      <- contr.sum(nlevels(nw_data_acc$font)) / 2
+
+m <- glmer(key_resp_2.corr~ item_type * font + (1+font*item_type|participant) + (1+font|string),data = nw_data_acc, family = binomial)
+
+summary(m)
+```
+
+```{r}
+estimate_means(m, by=c("item_type", "font")) |> plot()
+```
+
+## Bayesian Analysis
+
+```{r}
+#weak prior
+
+nw_data_acc$item_type <- factor(nw_data_acc$item_type)
+nw_data_acc$font      <- factor(nw_data_acc$font)
+
+nw_data_acc$participant <- factor(nw_data_acc$participant)
+nw_data_acc$base      <- factor(nw_data_acc$base)
+
+contrasts(nw_data_acc$font) <- contr.equalprior_pairs
+contrasts(nw_data_acc$item_type) <- contr.equalprior_pairs
+
+
+prior_exp1 <- c(set_prior("cauchy(0,.35)", class = "b"))
+
+```
+
+```{r}
+#fit model
+fit_acc_tl <- brm(
+ key_resp_2.corr~ item_type * font + (1+font*item_type|participant) + (1+font*item_type|base),
+  data = nw_data_acc,
+  warmup = 1000,
+  iter = 5000,
+  chains = 4,
+  init = 0,
+  family = bernoulli(),
+  cores = 4,
+  prior = prior_exp1,
+  control = list(adapt_delta = 0.9),
+  backend = "cmdstanr",
+  save_pars = save_pars(all = T),
+  sample_prior = T,
+  seed = 666,
+  threads = threading(4),
+  file = here::here("Analysis", "06-acc_analysis", "model_data", "fit_acc_context_TL")
+)
+```
+
+```{r}
+
+summary(fit_acc_tl)
+
+```
+
+```{r}
+estimate_means(fit_acc_tl, backend = "emmeans")
+```
+

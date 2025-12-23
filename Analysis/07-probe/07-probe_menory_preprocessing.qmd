@@ -1,0 +1,42 @@
+---
+title: "script_probe"
+format: html
+editor: visual
+---
+
+```{r}
+# List all CSV files
+file_list <- list.files(
+  path = here::here("Raw_files"),
+  pattern = "\\.csv$",
+  full.names = TRUE
+)
+
+# Read and combine into one data frame
+all_data_probe <- file_list %>%
+  map_dfr(~ read_csv(.x, col_types = cols(participant = col_character())))
+```
+
+```{r}
+probe_data <- all_data_probe  |> 
+  select(participant, item_type, list_id, string, key_resp_2.corr, font, stim_file,key_resp_probe.keys, ) |> 
+  drop_na()
+```
+
+```{r}
+
+```
+
+
+```{r}
+#m print z = cursive
+# if key matches font 1 else 0
+
+probe_data_acc <- probe_data |>
+  filter(key_resp_2.corr==1) |>
+  mutate(probe_acc = ifelse(key_resp_probe.keys=="z" & font=="cursive", 1, ifelse(key_resp_probe.keys=="m" & font=="print", 1, 0)))
+
+write.csv(probe_data_acc, file="probe_data.csv")
+
+```
+
