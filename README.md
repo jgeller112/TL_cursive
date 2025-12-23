@@ -18,35 +18,28 @@ stepwise, reproducible pipeline.
 TL_cursive/
 ├── Analysis/
 │   ├── 01-Read_Data/
-│   │   └── read_data.qmd
-│   │
 │   ├── 02-Data_preprocessing/
-│   │   └── data_preprocessing.qmd
-│   │
 │   ├── 03-RT_Preprocessing/
-│   │   └── rt_preprocessing.qmd
-│   │
 │   ├── 04-RT_analysis/
-│   │   └── rt_analysis.qmd
-│   │
 │   ├── 05-acc_preprocessing/
-│   │   └── acc_preprocessing.qmd
-│   │
 │   ├── 06-acc_analysis/
-│   │   └── acc_analysis.qmd
-│   │
 │   ├── 07-probe/
-│   │   └── probe_analysis.qmd
-│   │
 │   └── 08-Figures/
-│       └── figures.qmd
 │
 ├── Raw_files/
-│   ├── *.csv          # Pavlovia behavioral output (one file per participant)
-│   ├── *.log.gz       # Pavlovia log files
-│   └── README.md
+│   ├── 27851_HW_LDT_1_2025-10-20_11h42.34.556.csv
+│   ├── 27851_HW_LDT_1_2025-10-20_11h42.34.556.log.gz
+│   ├── 28003_HW_LDT_1_2025-11-08_21h31.47.875.csv
+│   ├── 28003_HW_LDT_1_2025-11-08_21h31.47.875.log.gz
+│   ├── 28348_HW_LDT_1_2025-10-16_10h38.39.242.csv
+│   ├── 28348_HW_LDT_1_2025-10-16_10h38.39.242.log.gz
+│   ├── 29278_HW_LDT_1_2025-10-15_18h18.58.000.csv
+│   ├── 29278_HW_LDT_1_2025-10-15_18h18.58.000.log.gz
+│   ├── 29493_HW_LDT_1_2025-10-16_13h44.20.014.csv
+│   └── ... (additional participant data)
 │
 ├── .gitignore
 ├── README.md
 └── LICENSE
+
 
