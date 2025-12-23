@@ -1,0 +1,49 @@
+# 01 – Read & Combine Raw Data
+
+This directory contains the first step of the analysis pipeline:
+**reading, standardizing, and combining raw Pavlovia behavioral files**.
+
+---
+
+## 📄 Files
+
+### `01-Read_Data.qmd`
+Quarto document that:
+
+- Reads all participant-level Pavlovia `.csv` files from `Raw_files/`
+- Standardizes variable names and formats
+- Merges behavioral data with stimulus metadata
+- Writes a combined trial-level dataset to `Combined_Raw_Data/`
+
+This file should be run **before all subsequent analysis steps**.
+
+---
+
+### `Word_Targets_Spreadsheet.csv`
+Stimulus metadata file containing information about the word targets
+(e.g., item identity, condition labels, confusability type).
+
+This file is joined to the raw behavioral data during the read step.
+
+---
+
+## 📁 Output
+
+### `Combined_Raw_Data/`
+This folder contains the **combined, cleaned, trial-level dataset**
+produced by `01-Read_Data.qmd`.
+
+- One or more `.csv` files
+- Each row corresponds to a **single trial**
+- Downstream preprocessing and analyses read from this directory
+
+Files in this folder are **derived data**, but are retained to make the
+analysis pipeline explicit and modular.
+
+---
+
+## 🔁 Reproducibility Notes
+
+- Raw Pavlovia files in `Raw_files/` are **never modified**
+- All transformations occur in `01-Read_Data.qmd`
+- If raw data change, this step should be re-run
