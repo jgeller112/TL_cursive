@@ -1,0 +1,44 @@
+# 05 – Accuracy Preprocessing
+
+This directory contains preprocessing steps applied to **accuracy data**
+from the lexical decision task prior to statistical analysis.
+
+Accuracy preprocessing is performed **after general data cleaning**
+and **before accuracy modeling**.
+
+---
+
+## 📄 Files
+
+### `05-acc-preprocessing.qmd`
+Quarto document that performs preprocessing specific to accuracy analyses,
+including:
+
+- Selecting trials for accuracy analyses
+- Coding responses as correct / incorrect
+- Applying participant- or trial-level exclusions (if applicable)
+- Preparing accuracy variables for modeling
+
+All preprocessing decisions are documented directly in this file.
+
+---
+
+## 📁 Output
+
+### `data_cleaned/`
+This folder contains the **accuracy-cleaned dataset** produced by
+`05-acc-preprocessing.qmd`.
+
+- Files are derived from the combined trial-level dataset
+- Each row corresponds to a **single trial**
+- Accuracy variables are ready for statistical modeling
+
+Downstream analyses (e.g., `06-acc_analysis/`) read from this directory.
+
+---
+
+## 🔁 Reproducibility Notes
+
+- Raw behavioral data are never modified
+- All accuracy-specific transformations occur in `05-acc-preprocessing.qmd`
+- If accuracy inclusion criteria change, this step should be re-run

@@ -1,0 +1,50 @@
+# 07 – Probe / Memory Preprocessing
+
+This directory contains preprocessing steps applied to **probe (recognition / memory) data**
+
+This step prepares probe responses for downstream memory analyses.
+
+---
+
+## 📄 Files
+
+### `07-probe_memory_preprocessing.qmd`
+Quarto document that performs preprocessing of probe / memory data, including:
+
+- Selecting probe trials
+- Coding memory responses (e.g., correct / incorrect)
+- Applying trial- or participant-level exclusions (if applicable)
+- Preparing variables for memory analysis
+
+All preprocessing decisions are documented directly in this file.
+
+---
+
+## 🔗 Input Data
+
+- Reads from the combined trial-level dataset produced earlier in the pipeline
+  (e.g., `Analysis/01-Read_Data/Combined_Raw_Data/`)
+- May also merge information from earlier preprocessing steps, if required
+
+No raw Pavlovia files are modified at this stage.
+
+---
+
+## 📊 Output
+
+This step produces a **probe-cleaned dataset** suitable for:
+
+- Memory accuracy analyses
+- Comparisons across script (print vs. cursive)
+- Linking memory performance to RT or accuracy measures (if applicable)
+
+Derived datasets are written to disk for transparency but can be regenerated
+by re-running this step.
+
+---
+
+## 🔁 Reproducibility Notes
+
+- Raw data remain untouched
+- All probe-specific transformations occur in this `.qmd`
+- If probe inclusion criteria change, this step should be re-run

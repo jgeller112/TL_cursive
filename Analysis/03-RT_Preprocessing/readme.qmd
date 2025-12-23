@@ -1,0 +1,44 @@
+# 03 – Reaction Time Preprocessing
+
+This directory contains all preprocessing steps applied to **reaction time (RT) data**
+prior to statistical modeling.
+
+RT preprocessing occurs **after general data cleaning** and **before RT analysis**.
+
+---
+
+## 📄 Files
+
+### `03-RT_preprocessing.qmd`
+Quarto document that performs RT-specific preprocessing, including:
+
+- Excluding incorrect trials (if applicable)
+- Applying lower and upper RT bounds
+- Removing extreme or implausible RTs
+- Preparing RT variables for downstream modeling
+
+All preprocessing decisions are documented directly in this file.
+
+---
+
+## 📁 Output
+
+### `Cleaned_RT/`
+This folder contains the **RT-cleaned dataset** produced by
+`03-RT_preprocessing.qmd`.
+
+- Files are derived from the combined trial-level dataset
+- Each row corresponds to a **single trial**
+- RTs in this folder are ready for modeling and visualization
+
+Downstream analyses (e.g., `04-RT_analysis/`) read from this directory.
+
+---
+
+## 🔁 Reproducibility Notes
+
+- No raw data are modified at this stage
+- All RT exclusions and transformations occur in `03-RT_preprocessing.qmd`
+- If RT preprocessing criteria change, this step should be re-run
+
+---
